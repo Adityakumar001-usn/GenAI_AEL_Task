@@ -37,6 +37,7 @@ class HallucinationDetector:
 
     def extract_dtcs(self, text: str) -> List[str]:
         """Finds all occurrences of validly formatted DTCs in the text."""
+        print(f"[hallucination_detector.py] | INPUT: Raw text | PROCESS: Scanning for SAE J2012 format [P/B/C/U][0-9A-F]{{4}} | OUTPUT: Regex complete")
         return self.dtc_pattern.findall(text)
 
     def extract_standards(self, text: str) -> List[str]:
