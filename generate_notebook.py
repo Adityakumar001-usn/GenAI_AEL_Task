@@ -26,9 +26,17 @@ import subprocess
 import time
 import requests
 
-# Set API Keys (In Colab, it's better to use userdata/secrets, but we set placeholders here)
-os.environ["GEMINI_API_KEY"] = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_KEY")
-os.environ["GROQ_API_KEY"] = os.environ.get("GROQ_API_KEY", "YOUR_GROQ_KEY")
+# Securely load API Keys from Google Colab Secrets (userdata)
+try:
+    from google.colab import userdata
+    os.environ["GEMINI_API_KEY"] = userdata.get('GEMINI_API_KEY')
+    os.environ["GROQ_API_KEY"] = userdata.get('GROQ_API_KEY')
+    print("API Keys loaded securely from Colab Secrets.")
+except ImportError:
+    print("Not running in Colab. Attempting to fall back to local environment variables.")
+except userdata.SecretNotFoundError as e:
+    print(f"CRITICAL: Missing API Key in Colab Secrets! {{e}}")
+    print("Please add GEMINI_API_KEY and GROQ_API_KEY to the 🔑 Secrets tab on the left.")
 
 # Install Ollama
 {b_cmd}
@@ -114,11 +122,47 @@ else:
     fig5.show()
 """
 
+text_runner_intro = """## E2E Diagnostic Test
+Before running the full 56-prompt benchmark, we run a single 'Verification Runner' to ensure all APIs are reachable and authenticating properly."""
+code_runner = """# Cell 1.5: Pre-Flight Verification Runner
+import asyncio
+from provider_adapters import GeminiAdapter, GroqAdapter, OllamaAdapter
+
+async def run_diagnostics():
+    print("--- E2E Connectivity Report ---")
+    adapters = {
+        "Gemini": GeminiAdapter(max_retries=1),
+        "Groq": GroqAdapter(max_retries=1),
+        "Ollama": OllamaAdapter(max_retries=1)
+    }
+
+    diagnostic_prompt = "Say exactly 'Hello Automotive'."
+
+    for name, adapter in adapters.items():
+        print(f"Testing {name}...")
+        try:
+            # We bypass the backoff wrapper to quickly fail if auth is wrong
+            # Actually, using generate_with_retry but with max_retries=1 is fine
+            res, _ = await adapter.generate_with_retry(diagnostic_prompt)
+            if res:
+                 print(f"  [{name}] Status: SUCCESS")
+            else:
+                 print(f"  [{name}] Status: FAILURE (Empty response)")
+        except Exception as e:
+            print(f"  [{name}] Status: FAILURE ({e})")
+
+    print("-------------------------------")
+
+await run_diagnostics()
+"""
+
 nb['cells'] = [
     nbf.v4.new_markdown_cell(text_intro),
     nbf.v4.new_markdown_cell(text_dl_intro),
     nbf.v4.new_code_cell(code_dl),
     nbf.v4.new_code_cell(code_setup_colab),
+    nbf.v4.new_markdown_cell(text_runner_intro),
+    nbf.v4.new_code_cell(code_runner),
     nbf.v4.new_code_cell(code_run_framework),
     nbf.v4.new_markdown_cell(text_viz_intro),
     nbf.v4.new_code_cell(code_viz)
