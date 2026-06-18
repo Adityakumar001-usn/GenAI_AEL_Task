@@ -5,6 +5,7 @@ import logging
 import asyncio
 import requests
 import aiohttp
+from google import genai
 from typing import Dict, Any, Tuple
 from abc import ABC, abstractmethod
 
@@ -119,59 +120,50 @@ class BaseAdapter(ABC):
                 retries += 1
 
 class GeminiAdapter(BaseAdapter):
-    """Adapter specifically for Google's Gemini Flash model."""
+    """Adapter specifically for Google's Gemini Flash model using the official SDK."""
     def __init__(self, model_name="gemini-1.5-flash", max_retries=3):
         super().__init__("Gemini", model_name, max_retries)
-        # Fetch API key from environment variables
         self.api_key = os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
             logger.warning("GEMINI_API_KEY environment variable not set. Gemini generation will fail.")
-
-        # Set the Google REST API endpoint
-        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
+        else:
+            self.client = genai.Client(api_key=self.api_key)
 
     async def generate_response(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
-        """Asynchronously calls the Gemini API."""
+        """Asynchronously calls the Gemini API via the official SDK."""
         if not self.api_key:
             raise ValueError("API Key missing")
 
-        headers = {"Content-Type": "application/json"}
-        # Construct the payload according to Gemini's API spec
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.2} # Low temperature for more consistent, factual responses
+        start_time = time.time()
+
+        # The new SDK generates synchronously by default.
+        # We wrap it in asyncio.to_thread to maintain our async architecture.
+        try:
+            response = await asyncio.to_thread(
+                self.client.models.generate_content,
+                model=self.model_name,
+                contents=prompt,
+                config=genai.types.GenerateContentConfig(temperature=0.2)
+            )
+        except Exception as e:
+             if "429" in str(e):
+                  raise Exception("Rate limit exceeded (429)")
+             raise e
+
+        api_time = time.time() - start_time
+
+        text = response.text
+
+        # Try to extract token usage if the SDK provides it
+        prompt_tokens = getattr(response.usage_metadata, "prompt_token_count", 0) if hasattr(response, "usage_metadata") and response.usage_metadata else 0
+        completion_tokens = getattr(response.usage_metadata, "candidates_token_count", 0) if hasattr(response, "usage_metadata") and response.usage_metadata else 0
+
+        metadata = {
+            "api_response_time_ms": api_time * 1000,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens
         }
-        url_with_key = f"{self.api_url}?key={self.api_key}"
-
-        # Use aiohttp for async network requests
-        async with aiohttp.ClientSession() as session:
-            start_time = time.time()
-            async with session.post(url_with_key, headers=headers, json=payload) as response:
-                api_time = time.time() - start_time
-
-                # Handle rate limits specifically (HTTP 429)
-                if response.status == 429:
-                    raise Exception("Rate limit exceeded (429)")
-
-                # Throw an error for other bad HTTP statuses (e.g., 500 Server Error)
-                response.raise_for_status()
-                data = await response.json()
-
-                try:
-                    # Extract the text from the complex JSON response structure
-                    text = data['candidates'][0]['content']['parts'][0]['text']
-
-                    # Extract exact token usage from the API if available
-                    usage = data.get('usageMetadata', {})
-                    metadata = {
-                        "api_response_time_ms": api_time * 1000,
-                        "prompt_tokens": usage.get("promptTokenCount", 0),
-                        "completion_tokens": usage.get("candidatesTokenCount", 0)
-                    }
-                    return text, metadata
-                except KeyError as e:
-                    raise Exception(f"Unexpected API response format: {data}") from e
-
+        return text, metadata
 
 class GroqAdapter(BaseAdapter):
     """Adapter specifically for Groq's Llama 3 API."""

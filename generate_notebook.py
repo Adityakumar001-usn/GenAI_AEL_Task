@@ -19,7 +19,7 @@ It includes setup cells for Google Colab, specifically for installing and servin
 b_cmd = "!apt-get update -qq && apt-get install -y -qq zstd\n!curl -fsSL https://ollama.com/install." + "sh | bas" + "h"
 
 code_setup_colab = f"""# Cell 1: Environment Setup
-!pip install -q requests aiohttp tiktoken plotly nbformat
+!pip install -q requests aiohttp tiktoken plotly nbformat google-genai
 
 import os
 import subprocess
