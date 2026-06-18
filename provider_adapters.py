@@ -97,6 +97,7 @@ class BaseAdapter(ABC):
             start_time = time.time() # Record start time to measure total latency
             try:
                 # Attempt to call the specific provider's API asynchronously
+                print(f"[provider_adapters.py] | INPUT: Prompt string | PROCESS: Establishing asynchronous connection to {self.provider_name} | OUTPUT: Awaiting stream...")
                 response_text, metadata = await self.generate_response(prompt)
 
                 # Calculate how long the call took
