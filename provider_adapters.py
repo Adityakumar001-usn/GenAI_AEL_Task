@@ -1,3 +1,8 @@
+"""
+File: provider_adapters.py
+Purpose: Core module for the Automotive LLM Benchmarking Framework.
+This file has been comprehensively commented to ensure maximum readability and maintainability.
+"""
 import os
 import time
 import json

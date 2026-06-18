@@ -3,7 +3,7 @@
 ## Project Overview
 This repository contains a comprehensive, production-ready evaluation framework designed to automatically benchmark multiple Large Language Models (LLMs) on complex automotive engineering tasks.
 
-The framework currently supports the evaluation of **Gemini 1.5 Flash**, **Groq (Llama 3)**, and **Ollama (Local Llama 3)** across 50+ specialized prompts in 8 distinct automotive categories.
+The framework currently supports the evaluation of **Gemini 1.5 Flash** (now natively utilizing the `google-genai` SDK for compatibility with the modern `AQ.` Auth Keys), **Groq (Llama 3)**, and **Ollama (Local Llama 3)** across 50+ specialized prompts in 8 distinct automotive categories.
 
 It evaluates models not just on traditional metrics like Latency and Tokens Per Second (TPS), but strictly enforces domain-specific checks including formatting adherence to **SAE J2012 DTCs**, validation of **ISO/SAE standards**, numeric specification drift tracking, and advanced technical hallucination detection.
 
@@ -32,8 +32,9 @@ This is the easiest method as it handles all dependency installation and local b
 
 1. Open `visualization_dashboard.ipynb` in [Google Colab](https://colab.research.google.com/).
 2. Ensure `prompt_dataset.csv`, `evaluation_framework.py`, `provider_adapters.py`, `metrics_engine.py`, and `hallucination_detector.py` are uploaded to the Colab session storage.
-3. In Cell 1, replace `"YOUR_GEMINI_KEY"` and `"YOUR_GROQ_KEY"` with your API keys.
-4. Go to **Runtime > Run all**. The notebook will automatically download Ollama, start the local server, run the 5-iteration benchmark loop, and display the final Plotly charts.
+3. Open the 🔑 Secrets tab on the left sidebar in Colab and add two secrets: `GEMINI_API_KEY` and `GROQ_API_KEY`.
+4. Run the newly added **Pre-Flight Verification Runner** (Cell 1.5) to test connectivity with both cloud APIs and the local Ollama instance before committing to the full benchmark loop.
+5. Go to **Runtime > Run all**. The notebook will automatically download Ollama, start the local server, run the 5-iteration benchmark loop, and display the final Plotly charts.
 
 ### Running Locally (Terminal / VS Code)
 
