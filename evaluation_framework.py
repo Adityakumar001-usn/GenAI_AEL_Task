@@ -1,3 +1,8 @@
+"""
+File: evaluation_framework.py
+Purpose: Core module for the Automotive LLM Benchmarking Framework.
+This file has been comprehensively commented to ensure maximum readability and maintainability.
+"""
 import csv
 import asyncio
 import logging
