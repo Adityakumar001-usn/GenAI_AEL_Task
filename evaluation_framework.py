@@ -134,6 +134,7 @@ class EvaluationFramework:
         info_density = self.metrics_engine.calculate_information_density(rep_response)
 
         # Run Hallucination and Reasoning Checks
+        print(f"[evaluation_framework.py] | INPUT: Response sample | PROCESS: Routing to Hallucination Detector | OUTPUT: Executing SAE/ISO validation...")
         hallucination_metrics = self.hallucination_detector.evaluate(rep_response)
         reasoning_metrics = self.metrics_engine.evaluate_reasoning_quality(rep_response)
 
