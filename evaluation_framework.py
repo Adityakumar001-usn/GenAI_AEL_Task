@@ -105,6 +105,9 @@ class EvaluationFramework:
                 responses.append("")
                 latencies.append(0)
 
+            # Artificial pacing to prevent blowing through free-tier RPM limits during POC
+            await asyncio.sleep(2)
+
         # --- Aggregate Phase ---
         # Filter out failed responses
         valid_responses = [r for r in responses if r]
