@@ -14,6 +14,7 @@ code_dl = """!wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI
 !wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/metrics_engine.py -O metrics_engine.py
 !wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/hallucination_detector.py -O hallucination_detector.py
 !wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/prompt_dataset.csv -O prompt_dataset.csv
+!wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/poc_dataset.csv -O poc_dataset.csv
 print("Required files downloaded successfully!")
 """
 text_intro = """# LLM Benchmarking in Automotive Engineering: Visualization Dashboard
@@ -69,18 +70,33 @@ print("Pulling Llama3 model (this may take a few minutes)...")
 print("Environment setup complete.")
 """
 
-code_run_framework = """# Cell 2: Run Benchmark
-# Note: Ensure evaluation_framework.py, provider_adapters.py, metrics_engine.py, hallucination_detector.py, and prompt_dataset.csv are in the working directory.
+text_2a_intro = """## Cell 2a: Proof of Concept (POC) Runner
+This cell executes a 'Glass-Box' demonstration using the small 3-prompt `poc_dataset.csv`. It executes flawlessly within 60 seconds without triggering free-tier API rate limits."""
+
+code_run_poc = """# Cell 2a: POC Runner (3 Prompts)
 import asyncio
 from evaluation_framework import EvaluationFramework
 
-# To prevent running all 56 prompts 5 times each (which takes a long time),
-# you might want to test with a smaller dataset first.
-framework = EvaluationFramework()
+print("Initializing Framework for POC Run...")
+poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv")
+await poc_framework.run_benchmark()
+print("POC Benchmarking finished! Results saved to benchmark_results_poc.csv")
+"""
 
-# Execute the benchmark
-await framework.run_benchmark()
-print("Benchmarking finished. Results saved to benchmark_results.csv")
+text_2b_intro = """## Cell 2b: Production-Scale Full Execution
+This cell processes the entire 56-prompt dataset. (Warning: Requires a paid cloud API tier or takes ~3 hours on free-tiers due to backoff delays)."""
+
+code_run_full = """# Cell 2b: Full Production Runner (56 Prompts)
+# Uncomment the code below if you have sufficient API quotas to run the full benchmark.
+
+# import asyncio
+# from evaluation_framework import EvaluationFramework
+#
+# print("Initializing Framework for FULL Run...")
+# full_framework = EvaluationFramework(prompt_file="prompt_dataset.csv", output_file="benchmark_results_full.csv")
+# await full_framework.run_benchmark()
+# print("Full Benchmarking finished! Results saved to benchmark_results_full.csv")
+print("Cell 2b Skipped by default for demo. Uncomment code to execute full 56-prompt run.")
 """
 
 text_viz_intro = """## Results Analysis and Visualization
@@ -92,10 +108,17 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 
-if not os.path.exists("benchmark_results.csv"):
-    print("No benchmark results found. Please run the framework first.")
+import glob
+
+# Dynamically find the most recently generated CSV
+csv_files = glob.glob("benchmark_results*.csv")
+if not csv_files:
+    print("No benchmark results found. Please run Cell 2a or 2b first.")
 else:
-    df = pd.read_csv("benchmark_results.csv")
+    # Sort by modification time to get the latest
+    latest_csv = max(csv_files, key=os.path.getmtime)
+    print(f"Loading data from: {latest_csv}")
+    df = pd.read_csv(latest_csv)
 
     # 1. Latency by Provider
     fig1 = px.box(df, x="Provider", y="Avg_Latency_ms", color="Provider",
@@ -215,7 +238,10 @@ nb['cells'] = [
     nbf.v4.new_code_cell(code_setup_colab),
     nbf.v4.new_markdown_cell(text_runner_intro),
     nbf.v4.new_code_cell(code_runner),
-    nbf.v4.new_code_cell(code_run_framework)
+    nbf.v4.new_markdown_cell(text_2a_intro),
+    nbf.v4.new_code_cell(code_run_poc),
+    nbf.v4.new_markdown_cell(text_2b_intro),
+    nbf.v4.new_code_cell(code_run_full)
 ]
 
 with open('visualization_dashboard.ipynb', 'w', encoding='utf-8') as f:

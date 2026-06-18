@@ -110,6 +110,7 @@ class MetricsEngine:
         # 1. Cosine Similarity Analysis
         # Convert all responses to frequency vectors
         vectors = [self._text_to_vector(r) for r in responses]
+        print(f"[metrics_engine.py] | INPUT: 5 iteration responses | PROCESS: Calculating Cosine Similarity Matrix | OUTPUT: Generated frequency vectors")
         similarities = []
         # Calculate pairwise similarity for every combination of runs
         for i in range(len(vectors)):
@@ -138,6 +139,7 @@ class MetricsEngine:
                 # it means the model is outputting wildly different technical specs each time.
                 if drift > len(all_data) * 0.7:
                     inconsistencies += 1
+                    print(f"[metrics_engine.py] | INPUT: Run data | PROCESS: Detecting Technical Spec Drift | OUTPUT: FLAGGED (Numeric Inconsistency Detected)")
 
         # Calculate a final score out of 100
         # We start with the cosine similarity (e.g., 0.85 -> 85%) and penalize for numerical contradictions
