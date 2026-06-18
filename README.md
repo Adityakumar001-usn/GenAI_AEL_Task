@@ -40,7 +40,7 @@ This is the easiest method as it handles all dependency installation and local b
 
 1. **Install Python Dependencies:**
    ```bash
-   pip install requests aiohttp tiktoken plotly pandas jupyterlab nbformat
+   pip install requests aiohttp tiktoken plotly pandas jupyterlab nbformat google-genai scikit-learn
    ```
 
 2. **Install & Start Ollama:**
