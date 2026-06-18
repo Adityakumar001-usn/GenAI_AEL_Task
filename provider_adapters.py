@@ -197,7 +197,8 @@ class GroqAdapter(BaseAdapter):
             "temperature": 0.2
         }
 
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=None)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             start_time = time.time()
             async with session.post(self.api_url, headers=headers, json=payload) as response:
                 api_time = time.time() - start_time
@@ -235,7 +236,8 @@ class OllamaAdapter(BaseAdapter):
             }
         }
 
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=None)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             start_time = time.time()
             try:
                 # Call local endpoint
