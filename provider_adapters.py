@@ -126,7 +126,7 @@ class BaseAdapter(ABC):
 
 class GeminiAdapter(BaseAdapter):
     """Adapter specifically for Google's Gemini Flash model using the official SDK."""
-    def __init__(self, model_name="gemini-1.5-flash-8b", max_retries=3):
+    def __init__(self, model_name="gemini-2.0-flash", max_retries=3):
         super().__init__("Gemini", model_name, max_retries)
         self.api_key = os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
@@ -172,7 +172,7 @@ class GeminiAdapter(BaseAdapter):
 
 class GroqAdapter(BaseAdapter):
     """Adapter specifically for Groq's Llama 3 API."""
-    def __init__(self, model_name="llama3-8b-8192", max_retries=3):
+    def __init__(self, model_name="llama-3.1-8b-instant", max_retries=3):
         super().__init__("Groq", model_name, max_retries)
         self.api_key = os.environ.get("GROQ_API_KEY")
         if not self.api_key:
