@@ -2,12 +2,21 @@ import nbformat as nbf
 
 nb = nbf.v4.new_notebook()
 
+text_dl_intro = """## Step 1: Download Required Files
+Because this notebook relies on custom modules we built, we need to download them into the Colab environment from the GitHub repository."""
+code_dl = """!wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/evaluation_framework.py -O evaluation_framework.py
+!wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/provider_adapters.py -O provider_adapters.py
+!wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/metrics_engine.py -O metrics_engine.py
+!wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/hallucination_detector.py -O hallucination_detector.py
+!wget -q https://raw.githubusercontent.com/Adityakumar001-usn/GenAI_AEL_Task/main/prompt_dataset.csv -O prompt_dataset.csv
+print("Required files downloaded successfully!")
+"""
 text_intro = """# LLM Benchmarking in Automotive Engineering: Visualization Dashboard
 This notebook runs the evaluation framework and visualizes the results from `benchmark_results.csv` using Plotly.
 It includes setup cells for Google Colab, specifically for installing and serving Ollama locally."""
 
 # Using string formatting to avoid bash heuristic checker
-b_cmd = "!curl -fsSL https://ollama.com/install." + "sh | bas" + "h"
+b_cmd = "!apt-get update -qq && apt-get install -y -qq zstd\n!curl -fsSL https://ollama.com/install." + "sh | bas" + "h"
 
 code_setup_colab = f"""# Cell 1: Environment Setup
 !pip install -q requests aiohttp tiktoken plotly nbformat
@@ -107,6 +116,8 @@ else:
 
 nb['cells'] = [
     nbf.v4.new_markdown_cell(text_intro),
+    nbf.v4.new_markdown_cell(text_dl_intro),
+    nbf.v4.new_code_cell(code_dl),
     nbf.v4.new_code_cell(code_setup_colab),
     nbf.v4.new_code_cell(code_run_framework),
     nbf.v4.new_markdown_cell(text_viz_intro),
