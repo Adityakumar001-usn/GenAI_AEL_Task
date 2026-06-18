@@ -126,7 +126,7 @@ class BaseAdapter(ABC):
 
 class GeminiAdapter(BaseAdapter):
     """Adapter specifically for Google's Gemini Flash model using the official SDK."""
-    def __init__(self, model_name="gemini-1.5-flash", max_retries=3):
+    def __init__(self, model_name="gemini-1.5-flash-latest", max_retries=3):
         super().__init__("Gemini", model_name, max_retries)
         self.api_key = os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
