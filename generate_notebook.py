@@ -78,9 +78,20 @@ import asyncio
 from evaluation_framework import EvaluationFramework
 
 print("Initializing Framework for POC Run...")
-poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv", delay_seconds=10)
+# Cell 2a: POC Runner (3 Prompts)
+import asyncio
+from evaluation_framework import EvaluationFramework
+
+print("Initializing Framework for POC Run...")
+# For the POC, we test Groq and Ollama to guarantee <60s execution without triggering strict Google Free Tier rate limits.
+poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv", delay_seconds=0)
+
+# Temporarily exclude Gemini for the speed run demo to prevent 429 quota exhaustion
+poc_framework.adapters = [a for a in poc_framework.adapters if a.provider_name != "Gemini"]
+
 await poc_framework.run_benchmark()
 print("POC Benchmarking finished! Results saved to benchmark_results_poc.csv")
+
 """
 
 text_2b_intro = """## Cell 2b: Production-Scale Full Execution
