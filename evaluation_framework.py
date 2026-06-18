@@ -27,9 +27,10 @@ class EvaluationFramework:
     It reads prompts, passes them to adapters, scores responses via metrics engines,
     and writes results to a CSV file.
     """
-    def __init__(self, prompt_file: str = "prompt_dataset.csv", output_file: str = "benchmark_results.csv"):
+    def __init__(self, prompt_file: str = "prompt_dataset.csv", output_file: str = "benchmark_results.csv", delay_seconds: int = 0):
         self.prompt_file = prompt_file
         self.output_file = output_file
+        self.delay_seconds = delay_seconds
 
         # Initialize the list of LLMs we want to test
         self.adapters = [
@@ -105,8 +106,10 @@ class EvaluationFramework:
                 responses.append("")
                 latencies.append(0)
 
-            # Artificial pacing to prevent blowing through free-tier RPM limits during POC
-            await asyncio.sleep(2)
+            if self.delay_seconds > 0:
+                await asyncio.sleep(self.delay_seconds)
+
+
 
         # --- Aggregate Phase ---
         # Filter out failed responses

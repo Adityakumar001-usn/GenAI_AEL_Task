@@ -78,7 +78,7 @@ import asyncio
 from evaluation_framework import EvaluationFramework
 
 print("Initializing Framework for POC Run...")
-poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv")
+poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv", delay_seconds=10)
 await poc_framework.run_benchmark()
 print("POC Benchmarking finished! Results saved to benchmark_results_poc.csv")
 """
