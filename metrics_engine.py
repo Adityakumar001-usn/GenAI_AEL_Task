@@ -100,7 +100,7 @@ class MetricsEngine:
         Fulfills 'Consistency Evaluation (15%)' requirement.
         """
         if len(responses) < 2:
-            return {"cosine_similarity_score": 1.0, "numerical_inconsistencies": 0}
+            return {"cosine_similarity_score": 1.0, "numerical_inconsistencies": 0, "overall_consistency_score": 100.0}
 
         # 1. Cosine Similarity Analysis
         # Convert all responses to frequency vectors
