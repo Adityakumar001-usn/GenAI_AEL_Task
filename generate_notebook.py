@@ -79,6 +79,7 @@ from evaluation_framework import EvaluationFramework
 
 print("Initializing Framework for POC Run...")
 # We use a 10-second delay to absolutely guarantee we do not hit Gemini 15 RPM free-tier limits.
+
 poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv", delay_seconds=10)
 
 # Explicit Iteration Cap: Ensure we ONLY process a maximum of 3 prompts even if the dataset is large
@@ -262,7 +263,7 @@ async def presentation_runner():
 
     # 1. Run the POC framework
     # It auto-saves to disk after every single prompt (Iteration cap: 3 prompts total per provider)
-    demo_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_demo.csv", delay_seconds=5)
+    demo_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_demo.csv", delay_seconds=10)
 
     # Force the framework to strictly cut off after 3 prompts total just in case
     demo_framework.prompts = demo_framework.prompts[:3]
