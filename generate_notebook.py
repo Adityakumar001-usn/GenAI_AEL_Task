@@ -78,20 +78,14 @@ import asyncio
 from evaluation_framework import EvaluationFramework
 
 print("Initializing Framework for POC Run...")
-# Cell 2a: POC Runner (3 Prompts)
-import asyncio
-from evaluation_framework import EvaluationFramework
+# We use a 10-second delay to absolutely guarantee we do not hit Gemini 15 RPM free-tier limits.
+poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv", delay_seconds=10)
 
-print("Initializing Framework for POC Run...")
-# For the POC, we test Groq and Ollama to guarantee <60s execution without triggering strict Google Free Tier rate limits.
-poc_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_poc.csv", delay_seconds=0)
-
-# Temporarily exclude Gemini for the speed run demo to prevent 429 quota exhaustion
-poc_framework.adapters = [a for a in poc_framework.adapters if a.provider_name != "Gemini"]
+# Explicit Iteration Cap: Ensure we ONLY process a maximum of 3 prompts even if the dataset is large
+poc_framework.prompts = poc_framework.prompts[:3]
 
 await poc_framework.run_benchmark()
 print("POC Benchmarking finished! Results saved to benchmark_results_poc.csv")
-
 """
 
 text_2b_intro = """## Cell 2b: Production-Scale Full Execution
@@ -239,6 +233,59 @@ async def run_diagnostics():
 await run_diagnostics()
 """
 
+text_force_stop = """## Helper: Emergency Force-Stop
+If execution takes too long, run this cell to cleanly shut down all background connections."""
+code_force_stop = """import asyncio
+print("Attempting to cleanly close any hanging asynchronous sessions...")
+# Get all running tasks in the current event loop
+try:
+    loop = asyncio.get_running_loop()
+    tasks = [t for t in asyncio.all_tasks(loop) if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+    print(f"Cancelled {len(tasks)} running tasks.")
+except RuntimeError:
+    print("No running event loop found.")
+print("Environment cleaned.")
+"""
+text_one_click = """## Cell 2c: One-Click 'Glass Box' Demonstration
+This cell runs the entire pipeline (Setup -> Run -> Save -> Visualize) in one fluid motion for the presentation."""
+code_one_click = """# Cell 2c: The Ultimate Presentation Runner
+import asyncio
+import pandas as pd
+import plotly.express as px
+from evaluation_framework import EvaluationFramework
+
+async def presentation_runner():
+    print("=============================================")
+    print("STARTING E2E AUTOMOTIVE PIPELINE")
+    print("=============================================")
+
+    # 1. Run the POC framework
+    # It auto-saves to disk after every single prompt (Iteration cap: 3 prompts total per provider)
+    demo_framework = EvaluationFramework(prompt_file="poc_dataset.csv", output_file="benchmark_results_demo.csv", delay_seconds=5)
+
+    # Force the framework to strictly cut off after 3 prompts total just in case
+    demo_framework.prompts = demo_framework.prompts[:3]
+
+    await demo_framework.run_benchmark()
+
+    print("\n=============================================")
+    print("BENCHMARK COMPLETE. RENDERING DASHBOARD...")
+    print("=============================================")
+
+    # 2. Automatically render the visualizations immediately
+    df = pd.read_csv("benchmark_results_demo.csv")
+
+    fig = px.box(df, x="Provider", y="Avg_Latency_ms", color="Provider", title="Average Latency Distribution by Provider")
+    fig.show()
+
+    fig2 = px.bar(df.groupby("Provider")["Avg_Tokens_Per_Second"].mean().reset_index(),
+                  x="Provider", y="Avg_Tokens_Per_Second", color="Provider", title="Average Tokens Per Second (TPS)")
+    fig2.show()
+
+await presentation_runner()
+"""
+
 nb['cells'] = [
     nbf.v4.new_markdown_cell(text_intro),
     nbf.v4.new_markdown_cell(text_mapping),
@@ -252,7 +299,11 @@ nb['cells'] = [
     nbf.v4.new_markdown_cell(text_2a_intro),
     nbf.v4.new_code_cell(code_run_poc),
     nbf.v4.new_markdown_cell(text_2b_intro),
-    nbf.v4.new_code_cell(code_run_full)
+    nbf.v4.new_code_cell(code_run_full),
+    nbf.v4.new_markdown_cell(text_one_click),
+    nbf.v4.new_code_cell(code_one_click),
+    nbf.v4.new_markdown_cell(text_force_stop),
+    nbf.v4.new_code_cell(code_force_stop)
 ]
 
 with open('visualization_dashboard.ipynb', 'w', encoding='utf-8') as f:
