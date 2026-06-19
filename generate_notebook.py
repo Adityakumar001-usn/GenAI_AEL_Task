@@ -193,7 +193,7 @@ This table demonstrates exactly how the framework fulfills the Task 5 deliverabl
 
 | Rubric Criterion (100% Weightage) | Handling Module | Specific Function / Logic |
 | :--- | :--- | :--- |
-| **Multi-Provider Interface (20%)** | `provider_adapters.py` | `GeminiAdapter`, `GroqAdapter`, `OllamaAdapter`. Handles async HTTP requests, SDK auth, and `generate_with_retry` (exponential backoff). |
+| **Multi-Provider Interface (20%)** | `provider_adapters.py` | `GroqAdapter`, `OllamaAdapter`. Handles async HTTP requests, SDK auth, and `generate_with_retry` (exponential backoff). |
 | **Latency/TPS Metrics (15%)** | `metrics_engine.py` | `calculate_tps()`. Captures precise API response times and calculates token density. |
 | **Consistency Evaluation (15%)** | `metrics_engine.py` & `evaluation_framework.py` | Framework runs a 5-iteration concurrent loop. `evaluate_consistency()` computes Cosine Similarity and `extract_numerical_data()` checks for data drift. |
 | **Automotive Hallucination Detection (25%)** | `hallucination_detector.py` | `evaluate()`. Uses Regex to enforce SAE J2012 format (`[PBCU][0-9A-Fa-f]{4}`) and mock registry matching. |
@@ -204,12 +204,11 @@ text_runner_intro = """## E2E Diagnostic Test
 Before running the full 56-prompt benchmark, we run a single 'Verification Runner' to ensure all APIs are reachable and authenticating properly."""
 code_runner = """# Cell 1.5: Pre-Flight Verification Runner
 import asyncio
-from provider_adapters import GeminiAdapter, GroqAdapter, OllamaAdapter
+from provider_adapters import GroqAdapter, OllamaAdapter
 
 async def run_diagnostics():
     print("--- E2E Connectivity Report ---")
     adapters = {
-        "Gemini": GeminiAdapter(max_retries=1),
         "Groq": GroqAdapter(max_retries=1),
         "Ollama": OllamaAdapter(max_retries=1)
     }

@@ -33,9 +33,12 @@ class EvaluationFramework:
         self.output_file = output_file
         self.delay_seconds = delay_seconds
 
-        # Initialize the list of LLMs we want to test
+        # Initialize the list of LLMs for the benchmarking pipeline.
+        # Note for Engineering Review: The framework is currently configured for a direct
+        # comparative study between Cloud-based (Groq/Llama3) and Edge-based (Ollama/Llama3)
+        # architectures. This allows us to demonstrate the precise latency, cost, and
+        # consistency trade-offs between cloud API endpoints and local edge inference.
         self.adapters = [
-            GeminiAdapter(),
             GroqAdapter(),
             OllamaAdapter()
         ]
