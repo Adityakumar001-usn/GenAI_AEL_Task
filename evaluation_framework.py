@@ -39,6 +39,12 @@ class EvaluationFramework:
             OllamaAdapter()
         ]
 
+        # Proactive Concurrency Control: Initialize an asyncio Semaphore.
+        # This explicitly caps the number of simultaneous concurrent API requests to exactly 2.
+        # By throttling throughput proactively at the orchestrator level, we prevent massive bursts
+        # of requests that commonly trigger HTTP 429 (Rate Limit Exceeded) bans from free-tier APIs.
+        self.semaphore = asyncio.Semaphore(2)
+
         # Initialize evaluation modules
         self.hallucination_detector = HallucinationDetector()
         self.metrics_engine = MetricsEngine()
@@ -185,14 +191,18 @@ class EvaluationFramework:
 
             # Loop through all 56 generated prompts
             for prompt_data in self.prompts:
-                # Await the execution of the 5-iteration loop
-                result = await self.run_prompt_iterations(adapter, prompt_data)
+                # Enforce Concurrency Throttling: Wait until a semaphore slot is open.
+                # If 2 requests are already processing, this block will pause and wait,
+                # ensuring we never overwhelm the provider's API limits.
+                async with self.semaphore:
+                    # Await the execution of the 5-iteration loop
+                    result = await self.run_prompt_iterations(adapter, prompt_data)
 
-                # Append to memory
-                self.results.append(result)
+                    # Append to memory
+                    self.results.append(result)
 
-                # Write to disk incrementally to prevent data loss if the script crashes
-                self._save_results(fieldnames)
+                    # Write to disk incrementally to prevent data loss if the script crashes
+                    self._save_results(fieldnames)
 
         logger.info("Benchmarking complete!")
 
