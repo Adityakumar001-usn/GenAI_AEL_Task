@@ -6,6 +6,7 @@ This file has been comprehensively commented to ensure maximum readability and m
 import csv
 import asyncio
 import logging
+import random
 from typing import List, Dict, Any
 
 from provider_adapters import GeminiAdapter, GroqAdapter, OllamaAdapter
@@ -39,11 +40,10 @@ class EvaluationFramework:
             OllamaAdapter()
         ]
 
-        # Proactive Concurrency Control: Initialize an asyncio Semaphore.
-        # This explicitly caps the number of simultaneous concurrent API requests to exactly 2.
-        # By throttling throughput proactively at the orchestrator level, we prevent massive bursts
-        # of requests that commonly trigger HTTP 429 (Rate Limit Exceeded) bans from free-tier APIs.
-        self.semaphore = asyncio.Semaphore(2)
+        # Tiered Traffic Control Layer 1: Concurrency Control (The Semaphore)
+        # We explicitly restrict concurrency to 1 to ensure strictly sequential execution.
+        # This prevents simultaneous bursts that instantly trigger HTTP 429 (Rate Limit Exceeded) bans.
+        self.semaphore = asyncio.Semaphore(1)
 
         # Initialize evaluation modules
         self.hallucination_detector = HallucinationDetector()
@@ -107,15 +107,17 @@ class EvaluationFramework:
                 total_completion_tokens += ct # Sum output sizes for averaging
 
             except Exception as e:
-                # If a run completely fails (even after retries), log it and append blank data
+                # If a run completely fails (even after Layer 3 retries), log it and append blank data
                 logger.error(f"Iteration {i+1} failed for {adapter.provider_name}: {e}")
                 responses.append("")
                 latencies.append(0)
 
+            # Tiered Traffic Control Layer 2 & 3: Configurable Throughput + Traffic Naturalization (Jitter)
             if self.delay_seconds > 0:
-                await asyncio.sleep(self.delay_seconds)
-
-
+                # Add a random jitter (0 to 3 seconds) to the base delay to make traffic patterns
+                # look organic and prevent triggering sophisticated bot/rate-limit firewalls.
+                jitter = random.uniform(0, 3)
+                await asyncio.sleep(self.delay_seconds + jitter)
 
         # --- Aggregate Phase ---
         # Filter out failed responses
